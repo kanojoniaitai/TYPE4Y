@@ -2,8 +2,8 @@
   font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
   line-height: 1.5;
-  color: #e0e0e0;
-  background-color: rgba(30, 30, 40, 0.92);
+  color: #8B4513;
+  background-color: transparent;
 }
 
 * {
@@ -29,10 +29,9 @@ html, body {
   display: flex;
   flex-direction: column;
   border-radius: 12px;
-  background-color: rgba(30, 30, 40, 0.92);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  background-color: #FFF8F0;
+  border: 1px solid #D2B48C;
+  box-shadow: 0 8px 32px rgba(139, 69, 19, 0.25);
   overflow: hidden;
 }
 
@@ -41,25 +40,36 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background-color: rgba(40, 40, 55, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background-color: #FAF0E6;
+  border-bottom: 1px solid #DEB887;
+  cursor: grab;
   -webkit-user-select: none;
   user-select: none;
+}
+
+.popup-header:active {
+  cursor: grabbing;
 }
 
 .popup-title {
   font-size: 12px;
   font-weight: 600;
-  color: #888;
+  color: #A0522D;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
+.popup-header .drag-hint {
+  font-size: 10px;
+  color: #CD853F;
+  margin-left: 8px;
+}
+
 .copy-btn {
   background: none;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #D2B48C;
   border-radius: 6px;
-  color: #aaa;
+  color: #A0522D;
   font-size: 16px;
   padding: 2px 8px;
   cursor: pointer;
@@ -67,13 +77,13 @@ html, body {
 }
 
 .copy-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.2);
+  background-color: #FAEBD7;
+  color: #8B4513;
+  border-color: #CD853F;
 }
 
 .copy-btn:active {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: #F5DEB3;
 }
 
 .popup-body {
@@ -86,7 +96,7 @@ html, body {
 
 .source-text {
   font-size: 13px;
-  color: #999;
+  color: #BC8F8F;
   margin-bottom: 8px;
   max-height: 80px;
   overflow-y: auto;
@@ -95,14 +105,14 @@ html, body {
 
 .divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(100, 140, 255, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, #D2B48C, transparent);
   margin: 8px 0;
   flex-shrink: 0;
 }
 
 .translation-text {
   font-size: 15px;
-  color: #e8e8e8;
+  color: #8B4513;
   word-break: break-word;
   white-space: pre-wrap;
 }
@@ -112,7 +122,7 @@ html, body {
   display: inline-block;
   width: 2px;
   height: 1em;
-  background-color: #6488ff;
+  background-color: #A0522D;
   margin-left: 2px;
   animation: blink 0.8s ease-in-out infinite;
   vertical-align: text-bottom;
@@ -135,16 +145,16 @@ html, body {
   gap: 8px;
   padding: 8px 16px;
   font-size: 12px;
-  color: #888;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: #BC8F8F;
+  border-top: 1px solid #DEB887;
 }
 
 .spinner {
   display: inline-block;
   width: 12px;
   height: 12px;
-  border: 2px solid rgba(100, 140, 255, 0.3);
-  border-top-color: #6488ff;
+  border: 2px solid rgba(160, 82, 45, 0.3);
+  border-top-color: #A0522D;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -162,10 +172,10 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(160, 82, 45, 0.25);
   border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(160, 82, 45, 0.4);
 }

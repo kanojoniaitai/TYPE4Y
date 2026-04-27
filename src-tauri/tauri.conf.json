@@ -28,12 +28,6 @@
     ],
     "security": {
       "csp": null
-    },
-    "trayIcon": {
-      "iconPath": "icons/icon.png",
-      "iconAsTemplate": false,
-      "tooltip": "Type4Y Translate - Loading...",
-      "menuOnLeftClick": false
     }
   },
   "bundle": {
