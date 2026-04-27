@@ -10,35 +10,28 @@ const copyBtn = document.getElementById("copy-btn")!;
 
 let currentTranslation = "";
 
+const appWindow = getCurrentWindow();
+
 async function showPopup() {
-  const appWindow = getCurrentWindow();
   await appWindow.show();
   await appWindow.setFocus();
 }
 
 async function hidePopup() {
-  const appWindow = getCurrentWindow();
   await appWindow.hide();
   sourceText.textContent = "";
-  translationText.innerHTML = "";
+  translationText.textContent = "";
   loadingIndicator.classList.add("hidden");
   popup.classList.add("hidden");
   currentTranslation = "";
+  translationText.classList.remove("translating");
 }
 
-function addCursor() {
-  const existing = translationText.querySelector(".cursor");
-  if (!existing) {
-    const cursor = document.createElement("span");
-    cursor.className = "cursor";
-    translationText.appendChild(cursor);
+appWindow.onFocusChanged(({ payload: focused }) => {
+  if (!focused) {
+    hidePopup();
   }
-}
-
-function removeCursor() {
-  const cursor = translationText.querySelector(".cursor");
-  if (cursor) cursor.remove();
-}
+});
 
 listen<string>("start-translation", async (event) => {
   sourceText.textContent = event.payload;
@@ -46,6 +39,7 @@ listen<string>("start-translation", async (event) => {
   currentTranslation = "";
   popup.classList.remove("hidden");
   loadingIndicator.classList.remove("hidden");
+  translationText.classList.remove("translating");
 
   try {
     await invoke("translate", { text: event.payload });
@@ -59,17 +53,25 @@ listen<string>("start-translation", async (event) => {
 listen<string>("translation-token", (event) => {
   popup.classList.remove("hidden");
   loadingIndicator.classList.add("hidden");
-  removeCursor();
+  translationText.classList.add("translating");
+  
   currentTranslation += event.payload;
   translationText.textContent = currentTranslation;
-  addCursor();
   translationText.scrollTop = translationText.scrollHeight;
 });
 
 listen<string>("translation-done", (event) => {
-  removeCursor();
+  translationText.classList.remove("translating");
   currentTranslation = event.payload;
   translationText.textContent = currentTranslation;
+});
+
+listen<string>("translation-error", (event) => {
+  console.error("Translation error:", event.payload);
+  translationText.textContent = "Error: " + event.payload;
+  popup.classList.remove("hidden");
+  loadingIndicator.classList.add("hidden");
+  translationText.classList.remove("translating");
 });
 
 listen<string>("model-ready", async () => {
@@ -78,9 +80,10 @@ listen<string>("model-ready", async () => {
 
 listen<string>("model-error", (event) => {
   console.error("Model error:", event.payload);
-  translationText.textContent = "Error: " + event.payload;
+  translationText.textContent = "Model Error: " + event.payload;
   popup.classList.remove("hidden");
   loadingIndicator.classList.add("hidden");
+  translationText.classList.remove("translating");
 });
 
 copyBtn.addEventListener("click", async () => {
@@ -95,10 +98,6 @@ copyBtn.addEventListener("click", async () => {
       console.error("Failed to copy");
     }
   }
-});
-
-window.addEventListener("blur", () => {
-  hidePopup();
 });
 
 window.addEventListener("DOMContentLoaded", async () => {

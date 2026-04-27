@@ -107,7 +107,8 @@ html, body {
   white-space: pre-wrap;
 }
 
-.translation-text .cursor {
+.translation-text::after {
+  content: "";
   display: inline-block;
   width: 2px;
   height: 1em;
@@ -115,6 +116,12 @@ html, body {
   margin-left: 2px;
   animation: blink 0.8s ease-in-out infinite;
   vertical-align: text-bottom;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.translation-text.translating::after {
+  opacity: 1;
 }
 
 @keyframes blink {

@@ -173,6 +173,15 @@ fn translate(app: AppHandle, state: tauri::State<'_, Arc<AppState>>, text: Strin
 }
 
 fn load_config() -> AppConfig {
+    let cwd_path = Path::new("config.toml");
+    if cwd_path.exists() {
+        if let Ok(content) = std::fs::read_to_string(cwd_path) {
+            if let Ok(config) = toml::from_str(&content) {
+                return config;
+            }
+        }
+    }
+
     let exe_dir = std::env::current_exe().unwrap_or_default();
     let config_path = exe_dir
         .parent()
@@ -181,15 +190,6 @@ fn load_config() -> AppConfig {
 
     if config_path.exists() {
         if let Ok(content) = std::fs::read_to_string(&config_path) {
-            if let Ok(config) = toml::from_str(&content) {
-                return config;
-            }
-        }
-    }
-
-    let alt_path = Path::new("config.toml");
-    if alt_path.exists() {
-        if let Ok(content) = std::fs::read_to_string(alt_path) {
             if let Ok(config) = toml::from_str(&content) {
                 return config;
             }
@@ -255,6 +255,30 @@ fn show_translation_popup(app: &AppHandle, source: &str) {
     let _ = window.set_focus();
 }
 
+fn trigger_translation_flow(app: &AppHandle) {
+    let app_clone = app.clone();
+    std::thread::spawn(move || {
+        let mut enigo = Enigo::new(&enigo::Settings::default()).unwrap();
+        let (x, y) = enigo.location().unwrap_or((0, 0));
+        
+        if let Some(window) = app_clone.get_webview_window("popup") {
+            let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition::new(x + 15, y + 15)));
+            
+            match get_selected_text() {
+                Ok(text) => {
+                    let _ = window.emit("start-translation", text);
+                }
+                Err(e) => {
+                    let _ = window.emit("translation-error", format!("Failed to get text: {}", e));
+                }
+            }
+            
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
+    });
+}
+
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, Modifiers, Code, ShortcutState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -266,17 +290,8 @@ pub fn run() {
         .plugin(tauri_plugin_global_shortcut::Builder::new()
             .with_handler(|app, shortcut, event| {
                 if event.state == ShortcutState::Pressed {
-                    if shortcut.matches(Modifiers::CONTROL | Modifiers::ALT, Code::KeyT) {
-                        if let Ok(text) = get_selected_text() {
-                            let mut enigo = Enigo::new(&enigo::Settings::default()).unwrap();
-                            let (x, y) = enigo.mouse_location().unwrap_or((0, 0));
-                            if let Some(window) = app.get_webview_window("popup") {
-                                let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition::new(x + 15, y + 15)));
-                                let _ = window.emit("start-translation", text);
-                                let _ = window.show();
-                                let _ = window.set_focus();
-                            }
-                        }
+                    if shortcut.matches(Modifiers::CONTROL, Code::KeyY) {
+                        trigger_translation_flow(app);
                     }
                 }
             })
@@ -308,16 +323,13 @@ pub fn run() {
                 .on_tray_icon_event(|tray, event| {
                     if let TrayIconEvent::Click { .. } = event {
                         let app = tray.app_handle();
-                        if let Some(window) = app.get_webview_window("popup") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
+                        trigger_translation_flow(app);
                     }
                 })
                 .build(app.handle())?;
 
-            let ctrl_alt_t = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyT);
-            if let Err(e) = app.global_shortcut().register(ctrl_alt_t) {
+            let ctrl_y = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyY);
+            if let Err(e) = app.global_shortcut().register(ctrl_y) {
                 eprintln!("Failed to register shortcut: {}", e);
             }
 
