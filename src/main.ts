@@ -40,6 +40,22 @@ function removeCursor() {
   if (cursor) cursor.remove();
 }
 
+listen<string>("start-translation", async (event) => {
+  sourceText.textContent = event.payload;
+  translationText.textContent = "";
+  currentTranslation = "";
+  popup.classList.remove("hidden");
+  loadingIndicator.classList.remove("hidden");
+
+  try {
+    await invoke("translate", { text: event.payload });
+  } catch (e) {
+    console.error(e);
+    translationText.textContent = "Error: " + e;
+    loadingIndicator.classList.add("hidden");
+  }
+});
+
 listen<string>("translation-token", (event) => {
   popup.classList.remove("hidden");
   loadingIndicator.classList.add("hidden");

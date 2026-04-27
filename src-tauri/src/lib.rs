@@ -13,7 +13,7 @@ use llama_cpp_2::model::LlamaModel;
 use llama_cpp_2::sampling::LlamaSampler;
 use serde::Deserialize;
 use tauri::{AppHandle, Emitter, Manager};
-use enigo::{Enigo, Keyboard, Direction};
+use enigo::{Enigo, Keyboard, Mouse, Direction};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 
@@ -47,7 +47,7 @@ struct AppState {
     translating: AtomicBool,
 }
 
-const SYSTEM_PROMPT: &str = "<start_of_turn>user\nTranslate the following Chinese text to English. Only output the translation result, nothing else:\n\n";
+const SYSTEM_PROMPT: &str = "<start_of_turn>user\nTranslate the following text. If it is in Chinese, translate it to English. If it is in English or another language, translate it to Chinese. Only output the translation result, nothing else:\n\n";
 
 #[tauri::command]
 fn get_status(state: tauri::State<'_, Arc<AppState>>) -> String {
@@ -202,7 +202,7 @@ fn load_config() -> AppConfig {
 fn get_selected_text() -> Result<String, String> {
     let mut clipboard = arboard::Clipboard::new().map_err(|e| format!("Clipboard init failed: {}", e))?;
 
-    let original = clipboard.get_text().ok();
+    let original = clipboard.get_text().unwrap_or_default();
 
     clipboard.clear().map_err(|e| format!("Clipboard clear failed: {}", e))?;
 
@@ -218,15 +218,28 @@ fn get_selected_text() -> Result<String, String> {
     enigo.key(enigo::Key::Control, Direction::Release)
         .map_err(|e| format!("Key release failed: {}", e))?;
 
-    std::thread::sleep(std::time::Duration::from_millis(100));
-
-    let selected = clipboard.get_text().ok().filter(|s| !s.is_empty());
-
-    if let Some(ref orig) = original {
-        let _ = clipboard.set_text(orig.clone());
+    let mut selected = String::new();
+    for _ in 0..20 {
+        std::thread::sleep(std::time::Duration::from_millis(25));
+        if let Ok(text) = clipboard.get_text() {
+            if !text.is_empty() {
+                selected = text;
+                break;
+            }
+        }
     }
 
-    selected.ok_or("No text selected".to_string())
+    if !original.is_empty() {
+        let _ = clipboard.set_text(original);
+    } else {
+        let _ = clipboard.clear();
+    }
+
+    if selected.is_empty() {
+        Err("No text selected".to_string())
+    } else {
+        Ok(selected)
+    }
 }
 
 #[tauri::command]
@@ -242,12 +255,32 @@ fn show_translation_popup(app: &AppHandle, source: &str) {
     let _ = window.set_focus();
 }
 
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, Modifiers, Code, ShortcutState};
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let config = load_config();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new()
+            .with_handler(|app, shortcut, event| {
+                if event.state == ShortcutState::Pressed {
+                    if shortcut.matches(Modifiers::CONTROL | Modifiers::ALT, Code::KeyT) {
+                        if let Ok(text) = get_selected_text() {
+                            let mut enigo = Enigo::new(&enigo::Settings::default()).unwrap();
+                            let (x, y) = enigo.mouse_location().unwrap_or((0, 0));
+                            if let Some(window) = app.get_webview_window("popup") {
+                                let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition::new(x + 15, y + 15)));
+                                let _ = window.emit("start-translation", text);
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                    }
+                }
+            })
+            .build())
         .manage(Arc::new(AppState {
             model: std::sync::Mutex::new(None),
             backend: std::sync::Mutex::new(None),
@@ -282,6 +315,11 @@ pub fn run() {
                     }
                 })
                 .build(app.handle())?;
+
+            let ctrl_alt_t = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyT);
+            if let Err(e) = app.global_shortcut().register(ctrl_alt_t) {
+                eprintln!("Failed to register shortcut: {}", e);
+            }
 
             std::thread::spawn(move || {
                 let backend = match LlamaBackend::init() {
