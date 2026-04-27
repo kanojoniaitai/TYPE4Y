@@ -1,0 +1,24 @@
+[package]
+name = "type4y-translate"
+version = "0.1.0"
+description = "One-click translation app using Vulkan + llama.cpp"
+authors = ["you"]
+edition = "2021"
+
+[lib]
+name = "type4y_translate_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+llama-cpp-2 = { version = "0.1", features = ["vulkan"] }
+arboard = "3"
+enigo = "0.3"
+encoding_rs = "0.8"
+toml = "0.8"

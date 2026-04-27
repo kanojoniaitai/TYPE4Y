@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Type4Y Translate</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+  <body>
+    <div id="popup" class="popup hidden">
+      <div class="popup-header">
+        <span class="popup-title">Translation</span>
+        <button id="copy-btn" class="copy-btn" title="Copy translation">&#x2398;</button>
+      </div>
+      <div class="popup-body">
+        <div id="source-text" class="source-text"></div>
+        <div class="divider"></div>
+        <div id="translation-text" class="translation-text"></div>
+      </div>
+      <div id="loading-indicator" class="loading-indicator hidden">
+        <span class="spinner"></span> Translating...
+      </div>
+    </div>
+  </body>
+</html>

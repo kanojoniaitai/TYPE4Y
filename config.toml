@@ -1,0 +1,6 @@
+model_path = "E:\\Type4Y\\translategemma-4b-it.Q8_0.gguf"
+n_ctx = 1024
+n_batch = 512
+n_gpu_layers = -1
+temperature = 0.3
+max_tokens = 512

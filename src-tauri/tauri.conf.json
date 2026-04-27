@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "translator-app",
+  "productName": "Type4Y Translate",
   "version": "0.1.0",
-  "identifier": "com.root.translator-app",
+  "identifier": "com.type4y.translate",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -10,19 +10,30 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
-        "title": "translator-app",
-        "width": 400,
-        "height": 500,
+        "label": "popup",
+        "title": "Translation",
+        "width": 480,
+        "height": 320,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
-        "visible": false
+        "skipTaskbar": true,
+        "resizable": false,
+        "visible": false,
+        "center": false
       }
     ],
     "security": {
       "csp": null
+    },
+    "trayIcon": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": false,
+      "tooltip": "Type4Y Translate - Loading...",
+      "menuOnLeftClick": false
     }
   },
   "bundle": {
